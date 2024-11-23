@@ -1,0 +1,20 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Review Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="{% static 'js/script.js' %}"></script>
+</head>
+<body class="bg-white-100">
+    <nav class="text-xl border-b border-1 p-4">
+        <h2>Amazon Product Review Summarization by Topic</h2>
+    </nav>
+    <div class="container mx-auto p-4">
+        {% block content %}
+        {% endblock content %}
+    </div>
+</body>
+</html>

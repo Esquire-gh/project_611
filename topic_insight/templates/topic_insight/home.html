@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+<!-- {% load static %} -->
+{% block content %}
+<div class="container">
+    <form 
+        action="." 
+        method="post" 
+        class=" input-form flex flex-col rounded-md sm:flex-row border rounded-md hover:shadow-md transition-shadow duration-200">
+        {% csrf_token %}
+        <input 
+            type="url" 
+            id="product_url" 
+            name="product_url" 
+            placeholder="Enter the URL of an Amazon product"
+            class="p-3 flex-1 outline-none border border-blue-500 focus:ring-1 focus:ring-blue-500 focus:ring-inset"
+        >
+        <button 
+            type="submit"
+            class="px-6 py-3 bg-blue-500 text-white font-medium hover:bg-blue-600 transition-colors duration-200"
+        >
+            Generate review insights
+        </button>
+    </form>
+
+    <div class="flex flex-col mt-2 gap-4">
+
+        {% if error_message %}
+            <div class="flex justify-center items-center loading-overlay">
+                <div class="bg-red-500 text-white px-6 py-3 rounded-md">
+                    {{ error_message }}
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="flex justify-center items-center loading-overlay" style="display: none;">
+            <div class="bg-green-500 text-white px-6 py-3 rounded-md">
+                Generating content, please wait...
+            </div>
+        </div>
+
+        {% if product_page_link %}
+        <div class="product-info flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0">
+            <a href={{ product_page_link }} target="_blank" class="hover:underline">Click to product page</a>
+            {% if customer_reviews_page_link %}
+            <a href={{ customer_reviews_page_link }} target="_blank" class="text-blue-500 hover:text-blue-600 hover:underline">Go to product's customer reviews page</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if results %}
+        <!-- <div class="grid grid-cols-1 gap-6">
+            {% for cluster in results.clusters %}
+            <div class="accordion-item bg-white rounded-lg border-2 shadow-md overflow-hidden 
+                {% if cluster.sentiment == 'positive' %}border-green-500{% else %}border-red-500{% endif %}">
+        
+                <div class="accordion-header p-5 cursor-pointer flex justify-between items-start space-x-4">
+                    <div class="space-y-2">
+                        <div class="font-medium {% if cluster.sentiment == 'positive' %}text-green-500{% else %}text-red-500{% endif %}">
+                            Sentiment: {{ cluster.sentiment }}
+                        </div>
+                        <h2 class="text-lg font-bold">{{ cluster.cluster_name }}</h2>
+                        <p class="text-gray-600">Customer reviews under this cluster "{{ cluster.cluster_name }}"</p>
+                    </div>
+                    <svg aria-hidden="true" class="accordion-icon w-6 h-6 text-gray-500 transition-transform duration-200 
+                        {% if forloop.first %}rotate-180{% endif %} mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+        
+                {% if cluster.cluster_reviews %}
+                <div class="p-4 border-t border-gray-200">
+                    <div class="bg-gray-100 rounded-lg p-3">
+                        <p class="text-gray-800">{{ cluster.cluster_reviews.0.phrase }}</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="accordion-content hidden p-4 space-y-4">
+                    {% for review in cluster.cluster_reviews|slice:"1:" %}
+                    <div class="bg-gray-100 rounded-lg p-3">
+                        <p class="text-gray-800">{{ review.phrase }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div> -->
+
+
+        <div class="grid grid-cols-1 gap-2">
+            {% for topic in results %}
+            {% if topic.reviews %}
+            <div class="accordion-item bg-white rounded-lg border-2 shadow-md overflow-hidden 
+                {% if topic.topic_sentiment_distribution.pos == 100 %}
+                    border-green-500
+                {% elif topic.topic_sentiment_distribution.neg == 100 %}
+                    border-red-500
+                {% else %}
+                    border-gray-500
+                {% endif %}">
+        
+                <div class="accordion-header p-5 cursor-pointer flex justify-between items-start space-x-4">
+                    <div class="space-y-2">
+                        <h2 class="text-lg font-bold">{{ topic.name }}</h2>
+                        <p class="text-gray-600">Customer reviews under this cluster "{{ topic.name }}"</p>
+                        <div class="font-medium flex gap-4 items-center">
+                            {% if topic.topic_sentiment_distribution.pos or topic.topic_sentiment_distribution.neg %}
+                            <span class="text-gray-500">
+                                Sentiment:
+                            </span>
+                            {% endif %}
+                        
+                            {% if topic.topic_sentiment_distribution.pos %}
+                                <small class="px-3 py-1 border-2 border-green-500 text-green-500 rounded">
+                                    Pos: {{ topic.topic_sentiment_distribution.pos|floatformat:2 }}%
+                                </small>
+                            {% endif %}
+                        
+                            {% if topic.topic_sentiment_distribution.neg %}
+                                <small class="px-3 py-1 border-2 border-red-500 text-red-500 rounded">
+                                    Neg: {{ topic.topic_sentiment_distribution.neg|floatformat:2 }}%
+                                </small>
+                            {% endif %}
+                        </div>
+                        
+                        
+                    </div>
+                    <svg aria-hidden="true" class="accordion-icon w-6 h-6 text-gray-500 transition-transform duration-200 
+                        {% if forloop.first %}rotate-180{% endif %} mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+        
+                {% if topic.reviews %}
+                <div class="p-4 border-t border-gray-200">
+                    <div class="bg-gray-100 rounded-lg p-3 border-2 {% if topic.reviews.0.sentiment == 'pos' %} border-green-500 {% else %} border-red-500 {% endif %}">
+                        <p class="text-gray-800">{{ topic.reviews.0.review_text }}</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="accordion-content hidden p-4 space-y-4">
+                    {% for review in topic.reviews|slice:"1:" %}
+                    <div class="bg-gray-100 rounded-lg p-3 border-2 {% if review.sentiment == 'pos' %} border-green-500 {% else %} border-red-500 {% endif %}">
+                        <p class="text-gray-800">{{ review.review_text }}</p>
+                        <!-- <p>{{ review.sentiment }}</p> -->
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        
+        {% endif %}
+    </div>
+{% endblock content %}
